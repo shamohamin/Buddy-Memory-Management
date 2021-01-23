@@ -1,6 +1,7 @@
 package ir.ac.kntu.os;
 
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -43,16 +44,24 @@ public class Tree {
         return null;
     }
 
-    public void reconstructTree(Block freedBlock) {
-        Block temp = freedBlock;
-        while(temp.getParent() != null && mergeIsPossible(temp)) {
-            temp.setLeftChild(null);
-            temp.setRightChild(null);
-            temp = temp.getParent();
+    /**
+     * this method is for merging the blocks which is freed tu make larger block
+     */
+    public void reconstructTree() {
+        ArrayList<Block> blocks = (ArrayList<Block>) this.postOrder();
+        for (int i = 0; i < blocks.size(); i++){
+            Block temp = blocks.get(i);
+            if (temp.isFree()){
+                while(temp.getParent() != null && mergeIsPossible(temp)) {
+                    temp.setLeftChild(null);
+                    temp.setRightChild(null);
+                    temp = temp.getParent();
+                }
+            }
         }
     }
 
-    public boolean mergeIsPossible(Block root) {
+    private boolean mergeIsPossible(Block root) {
         if (!root.isFree())
             return false;
 
