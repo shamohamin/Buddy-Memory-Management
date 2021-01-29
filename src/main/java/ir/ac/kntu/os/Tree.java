@@ -1,7 +1,6 @@
 package ir.ac.kntu.os;
 
 
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -9,7 +8,7 @@ public class Tree {
     private Block root;
 
     public Tree(int rootSize) {
-        this.root = new Block(rootSize, 0, true, 0);
+        this.root = new Block(rootSize, 0x0, true, 0);
     }
 
     public Block findBlock(int size) {
@@ -48,7 +47,7 @@ public class Tree {
      * this method is for merging the blocks which is freed tu make larger block
      */
     public void reconstructTree() {
-        ArrayList<Block> blocks = (ArrayList<Block>) this.postOrder();
+        List<Block> blocks = this.postOrder();
         for (int i = 0; i < blocks.size(); i++){
             Block temp = blocks.get(i);
             if (temp.isFree()){
