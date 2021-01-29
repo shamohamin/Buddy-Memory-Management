@@ -1,0 +1,105 @@
+* {
+    -fx-font-family: 'Arial';
+}
+
+.root {
+    -fx-border-width: 0 0 5 0;
+    -fx-border-style: dotted;
+    -fx-min-width: 100%;
+    -fx-min-height: 100%;
+    -fx-font-family: 'Arial';
+}
+
+.tree {
+    -fx-font-size: 18px;
+    -fx-background: #222930;
+    -fx-width: 100%;
+    -fx-border-radius: 1px;
+}
+.circle {
+    -fx-border-width: 1 1 1 1;
+    -fx-transition: transform .4s;
+    -fx-background-radius: 5;
+    -fx-border-color: black;
+
+}
+
+.circle-red {
+    -fx-effect: dropshadow(three-pass-box, rgba(124,10,2,0.8), 20, 0, 0, 0);
+}
+
+.circle-green {
+    -fx-effect: dropshadow(three-pass-box, rgba(54,255,20,0.9), 20, 0, 0, 0);
+}
+
+.circle:hover {
+   -fx-scale-x: 2.2;
+   -fx-scale-y: 2.2;
+   -fx-scale-z: 2.2;
+}
+
+.text {
+    -fx-fill: #FEFFF8;
+}
+
+.chart {
+    -fx-background-color: #302B2F;
+    -fx-color: black;
+}
+
+.chart-legend {
+   -fx-background-color:  transparent;
+   -fx-color: white;
+}
+
+.chart-plot-background {
+    -fx-background-color: #e2ecfe;
+}
+.chart-vertical-grid-lines {
+    -fx-stroke: #3278fa;
+}
+.chart-horizontal-grid-lines {
+    -fx-stroke: #3278fa;
+}
+.chart-alternative-row-fill {
+    -fx-fill: #99BCFD;
+    -fx-stroke: transparent;
+    -fx-stroke-width: 0;
+}
+
+.scroll-pane {
+    -fx-border-radius: 7px;
+}
+
+.scroll-bar:horizontal, .scroll-bar:vertical{
+    -fx-background-color:transparent;
+    -fx-max-width: 5px;
+}
+
+.increment-button, .decrement-button {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-max-width: 10px;
+}
+
+.scroll-bar:horizontal .track,
+.scroll-bar:vertical .track{
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-background-radius: 0em;
+}
+
+.scroll-bar:horizontal .thumb,
+.scroll-bar:vertical .thumb {
+    -fx-background-color: white;
+    -fx-background-radius: 5em;
+    -fx-width: 10px;
+}
+
+.line {
+    -fx-stroke: #eee;
+}
+
+.line-left {
+    -fx-stroke: #85144b;
+}
