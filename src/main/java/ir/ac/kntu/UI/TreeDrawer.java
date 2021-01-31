@@ -107,9 +107,7 @@ public class TreeDrawer implements Runnable {
     @Override
     public void run() {
         while(true) {
-            // if execution of process are over
-//            if(OsMemoryManager.getInstance().isExecutionOver())
-//                break;
+
 
             try {
                 Thread.sleep(2000);
@@ -122,6 +120,10 @@ public class TreeDrawer implements Runnable {
             try {
                 Thread.sleep(200);
             }catch (Exception ex){}
+
+            //  if execution of process are over
+            if(OsMemoryManager.getInstance().isExecutionOver())
+                break;
         }
 
     }

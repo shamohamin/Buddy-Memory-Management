@@ -69,16 +69,18 @@ public class OsMemoryManager implements IMemoryManager, IProcessConfig {
      */
     public void deAllocation(int pid, long address) throws NoneDellocatingBlockError {
         locker.writeLockList();
-
+        int i = -1;
         try {
             Block freedBlock = null;
-            for (Block block : this.occupiedSpaces) {
+            for (int j = 0; j < this.occupiedSpaces.size(); j++) {
+                Block block = this.occupiedSpaces.get(j);
                 if (block.getPidOfProcess() == pid) { // if process has block which was recently occupied by process
                     boolean found = false;
                     for (Block childBlock : block.getOccupiedChildrenBlocks()) {
                         if (childBlock.getAddress() == address) {
                             found = true;
                             freedBlock = block;
+                            i = j;
                             break;
                         }
                     }
@@ -92,6 +94,7 @@ public class OsMemoryManager implements IMemoryManager, IProcessConfig {
                 if (freedBlock.getOccupySize() == 0) {
                     freedBlock.setPidOfProcess(0);
                     freedBlock.setFree(true);
+                    this.occupiedSpaces.remove(i);
                 }
 //                System.out.println("deallocation of process: " + pid);
 //                System.out.print(freedBlock.getOccupiedChildrenBlocks());
@@ -233,15 +236,16 @@ public class OsMemoryManager implements IMemoryManager, IProcessConfig {
         executorService.submit(() -> {
             // for merging the blocks if its possible after every 2 seconds
             while(true){
-                // if execution is over break finish the process
-//                if (this.isExecutionOver())
-//                    break;
                 try {
                     Thread.sleep(2000);
                 }catch (Exception ex) {
                     ex.printStackTrace();
                 }
                 this.mergingFreedBlocks();
+                
+                // if execution is over break finish the process
+                if (this.isExecutionOver())
+                    break;
             }
         });
     }
@@ -264,7 +268,6 @@ public class OsMemoryManager implements IMemoryManager, IProcessConfig {
         for (Block block: this.occupiedSpaces) {
             if (block.getPidOfProcess() == pid) {
                 occupiedSizes += block.getOccupySize();
-                this.internalFragmentation += (block.getSize() - block.getOccupySize());
             }
         }
         return occupiedSizes;

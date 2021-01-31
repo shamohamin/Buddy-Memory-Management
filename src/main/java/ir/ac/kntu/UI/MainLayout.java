@@ -33,6 +33,7 @@ public class MainLayout implements UiConfig {
         // charts
         HBox hBox2 = new HBox();
         VBox vBox = new VBox();
+//        VBox vBox1 = new VBox();
 
         vBox.getStyleClass().add("chart");
         hBox1.getStyleClass().add("panel");
@@ -44,7 +45,10 @@ public class MainLayout implements UiConfig {
         ));
 
         vBox.setMinWidth(MAX_WIDTH/2);
-        vBox.setMaxHeight(MAX_HEIGHT/2);
+        vBox.setMaxHeight(MAX_HEIGHT);
+
+//        vBox1.setMinWidth(MAX_WIDTH/2);
+//        vBox1.setMaxHeight(MAX_HEIGHT/2);
 
         hBox1.setMinWidth( 55*MAX_WIDTH/100.);
         hBox1.setMinHeight(MAX_HEIGHT);
@@ -66,7 +70,7 @@ public class MainLayout implements UiConfig {
         hBox2.setMinWidth(MAX_WIDTH/2);
         hBox2.setMinHeight(MAX_HEIGHT);
 
-        hBox2.getChildren().add(vBox);
+        hBox2.getChildren().addAll(vBox);
         hBox.setSpacing(1);
 
         hBox.getChildren().addAll(hBox1, hBox2);

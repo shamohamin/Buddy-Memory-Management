@@ -24,6 +24,7 @@ public class MemoryReporter implements Runnable {
     class MemoryStruct {
         public int pid;
         public int occupiedSpaces;
+        public ArrayList<Long> addresses;
         public LocalTime executionTime;
         public LocalDateTime startTime;
         public LocalDateTime endTime;
@@ -38,7 +39,7 @@ public class MemoryReporter implements Runnable {
         this.makeFolder();
     }
 
-    private void makeFolder() {
+    private void makeFolder() { // check if log folder is created or not
         try {
             if (!tempFile.exists()) {
                 tempFile.mkdir();
@@ -63,19 +64,17 @@ public class MemoryReporter implements Runnable {
     @Override
     public void run() {
         while (true) {
-//            if (OsMemoryManager.getInstance().isExecutionOver())
-//                break;
-
             try {
                 Thread.sleep(SLEEPING_TIME);
             } catch (InterruptedException ex) {
             }
 
             ArrayList<MemoryStruct> memoryStructs;
+            // getting lock for list of process
             Locker.getLockerInstance().readLockList();
             int internalFragment = 0;
             try {
-                 internalFragment = OsMemoryManager.getInstance().calculateTheInternalFragment();
+                internalFragment = OsMemoryManager.getInstance().calculateTheInternalFragment();
                 memoryStructs = this.reportMemory();
             } finally {
                 Locker.getLockerInstance().readUnlockList();
@@ -83,6 +82,9 @@ public class MemoryReporter implements Runnable {
             // because it uses readLock
             int totalOccupies = OsMemoryManager.getInstance().getOccupiedSpaces();
             this.writeFile(memoryStructs, internalFragment, totalOccupies);
+
+            if (OsMemoryManager.getInstance().isExecutionOver())
+                break;
         }
     }
 
@@ -97,9 +99,11 @@ public class MemoryReporter implements Runnable {
                 memoryStruct.occupiedSpaces = OsMemoryManager
                         .getInstance()
                         .getOccupiesOfSpecifiedProcess(process.getPid());
+                memoryStruct.addresses = process.getAddresses();
                 memoryStruct.endTime = null;
+
                 boolean finish = process.isProcessOver();
-                if(finish) {
+                if (finish) {
                     memoryStruct.endTime = process.getEndTime();
                 }
                 memoryStruct.isProcessFinished = finish;
@@ -137,10 +141,11 @@ public class MemoryReporter implements Runnable {
                 jsonObject.put("Start Time", memoryStruct.startTime.toString());
                 if (!memoryStruct.isProcessFinished) {
                     jsonObject.put("End Time", null);
-                }else {
+                } else {
                     jsonObject.put("End Time", memoryStruct.endTime.toString());
                 }
                 jsonObject.put("Is Process Finished", memoryStruct.isProcessFinished);
+                jsonObject.put("Addresses", memoryStruct.addresses);
                 jsonArray.add(jsonObject);
             }
             memoryJsonObject.put("Processes", jsonArray);

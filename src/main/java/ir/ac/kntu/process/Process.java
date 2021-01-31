@@ -8,6 +8,7 @@ import ir.ac.kntu.os.OsMemoryManager;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -22,10 +23,15 @@ public class Process implements IProcess {
     private LocalDateTime startTime;
     private LocalDateTime endTime;
     private boolean finished;
-    private ReentrantLock finishedLock;
+    private ReentrantLock listAndFinishLock;
 
     public ArrayList<Long> getAddresses() {
-        return new ArrayList<>(holdingRequestedAddress);
+        this.listAndFinishLock.lock();
+        try {
+            return new ArrayList<>(holdingRequestedAddress);
+        } finally {
+            this.listAndFinishLock.unlock();
+        }
     }
 
     public int getPid() {
@@ -43,7 +49,7 @@ public class Process implements IProcess {
         this.holdingRequestedAddress = new ArrayList<>();
         this.startTime = LocalDateTime.now();
         this.finished = false;
-        this.finishedLock = new ReentrantLock();
+        this.listAndFinishLock = new ReentrantLock();
     }
 
     public void deAllocation(long address) {
@@ -91,17 +97,34 @@ public class Process implements IProcess {
                             int size = ProcessRandomGenerator.makeProcessWeightedProbAllocatingRequest();
                             long address = this.allocation(size);
                             if (address != -1) {
-                                this.holdingRequestedAddress.add(address);
+                                this.listAndFinishLock.lock();
+                                try {
+                                    this.holdingRequestedAddress.add(address);
+                                } finally {
+                                    this.listAndFinishLock.unlock();
+                                }
                             }
                         }));
                         break;
                     default:
                         t.add(this.executors.submit(() -> {
-                            int s = this.holdingRequestedAddress.size();
+                            int s;
+                            this.listAndFinishLock.lock();
+                            try {
+                                s = this.holdingRequestedAddress.size();
+                            } finally {
+                                this.listAndFinishLock.unlock();
+                            }
+
                             if (s != 0) {
                                 int pos = (int) ProcessRandomGenerator.randomRange(0, s);
                                 Long l = this.holdingRequestedAddress.get(pos);
-                                this.holdingRequestedAddress.remove(pos);
+                                this.listAndFinishLock.lock();
+                                try {
+                                    this.holdingRequestedAddress.remove(pos);
+                                } finally {
+                                    this.listAndFinishLock.unlock();
+                                }
                                 this.deAllocation(l);
                             }
                         }));
@@ -124,30 +147,38 @@ public class Process implements IProcess {
             }
         }
         // deAllocating entire process Address
-        for (Long address : this.holdingRequestedAddress) {
-            this.deAllocation(address);
+        this.listAndFinishLock.lock();
+        try {
+            for (Long address : this.holdingRequestedAddress) {
+                this.deAllocation(address);
+            }
+            for (int i = 0; i < this.holdingRequestedAddress.size(); i++) {
+                this.holdingRequestedAddress.remove(i);
+            }
+        } finally {
+            this.listAndFinishLock.unlock();
         }
 
         // tell the other Process iam over
         OsMemoryManager.getInstance().incrementTheFinishVariable();
 
-        this.finishedLock.lock();
+        this.listAndFinishLock.lock();
         try {
             this.finished = true;
             this.endTime = LocalDateTime.now();
         } finally {
-            this.finishedLock.unlock();
+            this.listAndFinishLock.unlock();
         }
     }
 
     public boolean isProcessOver() {
-        this.finishedLock.lock();
+        this.listAndFinishLock.lock();
         try {
             if (this.finished)
                 return true;
             return false;
         } finally {
-            this.finishedLock.unlock();
+            this.listAndFinishLock.unlock();
         }
     }
 
