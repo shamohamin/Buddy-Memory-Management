@@ -12,6 +12,9 @@ import javafx.scene.text.Text;
 import java.time.LocalTime;
 import java.util.ArrayList;
 
+/**
+ * ProcessCharts makes the Charts of process Allocation and the memory reporting chart
+ */
 public class ProcessCharts implements Runnable {
     private VBox mainLayout;
     private LineChart lineChart;

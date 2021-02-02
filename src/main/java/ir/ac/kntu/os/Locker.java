@@ -2,6 +2,9 @@ package ir.ac.kntu.os;
 
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+/**
+ * Locker hold the all the locks which is common between the processes and it use singleton design pattern
+ */
 public class Locker {
     private ReentrantReadWriteLock occupyListLlLock;
     private ReentrantReadWriteLock treeLock;

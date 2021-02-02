@@ -19,7 +19,9 @@ import java.util.ArrayList;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONArray;
 
-
+/**
+ * MemoryReporter Is For Reporting The Memory Each 5seconds And Make Json Log Files In Log Folder
+ */
 public class MemoryReporter implements Runnable {
     class MemoryStruct {
         public int pid;
@@ -77,10 +79,10 @@ public class MemoryReporter implements Runnable {
     private void runUtil() {
         try {
             Thread.sleep(SLEEPING_TIME);
-        } catch (InterruptedException ex) {}
+        } catch (InterruptedException ignored) {}
 
         ArrayList<MemoryStruct> memoryStructs;
-        // getting lock for list of process
+        // getting lock for list of Occupied Blocked
         Locker.getLockerInstance().readLockList();
         int internalFragment = 0;
         try {
@@ -169,9 +171,9 @@ public class MemoryReporter implements Runnable {
                 String prettyJsonString = gson.toJson(je);
                 System.out.println("Starting Logging The Memory.");
                 System.out.println(prettyJsonString);
-                System.out.println("*********************************************************** " + counter);
+                System.out.println(
+                        "*********************************************************** END OF REPORT: " + counter);
                 this.counter++;
-
                 fileWriter.write(prettyJsonString);
                 fileWriter.flush();
             } catch (IOException ex) {

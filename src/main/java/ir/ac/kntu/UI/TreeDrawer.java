@@ -15,7 +15,9 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 
-
+/**
+ * TreeDrawer Draws Tree Of UI
+ */
 public class TreeDrawer implements Runnable {
     private ScrollPane treePane;
     private Tree tree;

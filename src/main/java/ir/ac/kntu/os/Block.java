@@ -2,6 +2,10 @@ package ir.ac.kntu.os;
 
 import java.util.*;
 
+/**
+ * Block Is For Holding The Each Block In Tree
+ * Uses First Fit Algorithm For Allocating The Each Sizes Inside The Blocks
+ */
 public class Block {
     private int size;
     private long address;
@@ -95,10 +99,6 @@ public class Block {
         return isFree;
     }
 
-    public void setOccupySize(int occupySize) {
-        this.occupySize = occupySize;
-    }
-
     public Block getLeftChild() { return leftChild; }
 
     public void setLeftChild(Block leftChild) { this.leftChild = leftChild; }
@@ -116,7 +116,7 @@ public class Block {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Block block = (Block) o;
-        return size == block.size;
+        return size == block.size && address == block.address;
     }
 
     @Override

@@ -2,12 +2,20 @@ package ir.ac.kntu.process;
 
 import java.util.ArrayList;
 
+/**
+ * ProcessRandomGenerator Generates Random Sizes And Sleep Times For each Process
+ */
 public class ProcessRandomGenerator {
 
     public static int randomRequestCount(int start, int last) {
         return (int) ProcessRandomGenerator.randomRange(start, last);
     }
 
+    /**
+     * Make Random Sizes For Each Processes
+     * Until 32KB Is Prior And Each Time For Shuffling The Data It Makes Random Sizes
+     * @return Size Of Allocating Sizes
+     */
     public static int makeProcessWeightedProbAllocatingRequest() {
         ArrayList<Integer> weightedProp = new ArrayList<>();
         weightedProp.addAll(makeRandomForSpecificRange(10, 0, 32));

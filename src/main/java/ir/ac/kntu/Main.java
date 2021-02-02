@@ -9,7 +9,9 @@ import javafx.scene.Scene;
 import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
 
-
+/**
+ * @author MoahammadAmin Shafiee
+ */
 public class Main extends Application implements UiConfig, IProcessConfig {
 
     public static void main(String[] args) {
@@ -19,7 +21,7 @@ public class Main extends Application implements UiConfig, IProcessConfig {
     @Override
     public void start(Stage stage) throws Exception {
         Pane root = new Pane();
-        OsMemoryManager.getInstance();
+        this.initApp();
 
         try {
             root.getStylesheets().add(
@@ -37,6 +39,10 @@ public class Main extends Application implements UiConfig, IProcessConfig {
         stage.setTitle("Processes");
         stage.setScene(scene);
         stage.show();
+    }
+
+    private void initApp() {
+        OsMemoryManager.getInstance();
     }
 
 }

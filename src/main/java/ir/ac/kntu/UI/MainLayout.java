@@ -9,13 +9,12 @@ import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
 
-
+/**
+ * Hold MainLayout Of UI Design
+ */
 public class MainLayout implements UiConfig {
     private Pane root;
     private ScrollPane treeScene;
-    private ChoiceBox choiceBox;
-    private ObservableList list;
-    private static Integer sleepTime;
 
     public MainLayout(Pane root) {
         this.root = root;
@@ -33,7 +32,6 @@ public class MainLayout implements UiConfig {
         // charts
         HBox hBox2 = new HBox();
         VBox vBox = new VBox();
-//        VBox vBox1 = new VBox();
 
         vBox.getStyleClass().add("chart");
         hBox1.getStyleClass().add("panel");
@@ -47,8 +45,6 @@ public class MainLayout implements UiConfig {
         vBox.setMinWidth(MAX_WIDTH/2);
         vBox.setMaxHeight(MAX_HEIGHT);
 
-//        vBox1.setMinWidth(MAX_WIDTH/2);
-//        vBox1.setMaxHeight(MAX_HEIGHT/2);
 
         hBox1.setMinWidth( 55*MAX_WIDTH/100.);
         hBox1.setMinHeight(MAX_HEIGHT);
@@ -57,13 +53,12 @@ public class MainLayout implements UiConfig {
 
         treeScene.setHbarPolicy(ScrollPane.ScrollBarPolicy.ALWAYS);
         treeScene.setVbarPolicy(ScrollPane.ScrollBarPolicy.ALWAYS);
-//        treeScene.setMaxHeight(MAX_HEIGHT / 2);
+
+        // all have daemons true in case exiting program
         Thread thread = new Thread(new TreeDrawer(treeScene, OsMemoryManager.getInstance().getTree()));
-        thread.setDaemon(true);
-        thread.start();
+        thread.setDaemon(true); thread.start();
         Thread thread1 = new Thread(new ProcessCharts(vBox, MAX_WIDTH/2 - 10));
-        thread1.setDaemon(true);
-        thread1.start();
+        thread1.setDaemon(true); thread1.start();
 
         hBox1.getChildren().add(treeScene);
 

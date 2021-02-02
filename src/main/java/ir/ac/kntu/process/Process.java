@@ -53,7 +53,6 @@ public class Process implements IProcess {
 
     public void deAllocation(long address) {
         try {
-//            System.out.printf("deAllocating address is %d\n", address);
             OsMemoryManager.getInstance().deAllocation(this.pid, address);
         } catch (NoneDellocatingBlockError ex) {
             System.err.println("THIS ADDRESS WAS NOT ALLOCATED TO BE FREED");
@@ -61,10 +60,8 @@ public class Process implements IProcess {
     }
 
     public long allocation(int size) {
-//        int size = (int) ProcessRandomGenerator.randomRange(1, MAX_REQUEST_SIZE);
         try {
             long address = OsMemoryManager.getInstance().allocation(this.pid, size);
-//            System.out.printf("SIZE IS: %d  return address is: %d \n", size, address);
             return address;
         } catch (NoneAllocatingBlock | ExceedMemorySizeError ex) {
             System.err.printf(
@@ -80,10 +77,10 @@ public class Process implements IProcess {
             // sleeping for random milliseconds
             try {
                 Thread.sleep(ProcessRandomGenerator.randomSleepTime(START_SLEEP_TIME, END_SLEEP_TIME));
-            } catch (InterruptedException ex) {
-            }
+            } catch (InterruptedException ignored) {}
 
             try {
+                // Make Random Job
                 Jobs job;
                 this.listAndFinishLock.lock();
                 try {
@@ -147,7 +144,7 @@ public class Process implements IProcess {
 //            if (!future.isDone()) {
                 try {
                     future.get();
-                } catch (Exception ex) {}
+                } catch (Exception ignored) {}
 //            }
         }
         // deAllocating entire process Address
@@ -166,7 +163,7 @@ public class Process implements IProcess {
 
         try {
             Thread.sleep(1000l);
-        }catch (InterruptedException ex){}
+        }catch (InterruptedException ignored){}
 
         this.listAndFinishLock.lock();
         try {

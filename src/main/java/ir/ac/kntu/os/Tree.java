@@ -44,7 +44,7 @@ public class Tree {
     }
 
     /**
-     * this method is for merging the blocks which is freed tu make larger block
+     * this method is for merging the blocks which is freed to make larger block
      */
     public void reconstructTree() {
         List<Block> blocks = this.postOrder();
@@ -60,6 +60,11 @@ public class Tree {
         }
     }
 
+    /**
+     * checks its possible to merge the each branch of tree
+     * @param root its root of each branch of tree
+     * @return is possible to merge this branch of tree
+     */
     private boolean mergeIsPossible(Block root) {
         if (!root.isFree())
             return false;

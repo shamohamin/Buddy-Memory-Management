@@ -127,7 +127,6 @@ public class OsMemoryManager implements IMemoryManager, IProcessConfig {
                         long out = this.occupiedSpaces.get(i).addChildren(size);
                         if (out == -1)
                             break;
-//                        System.out.println(this.occupiedSpaces.get(i).getOccupiedChildrenBlocks());
                         return out;
                     }
                 }
@@ -207,14 +206,9 @@ public class OsMemoryManager implements IMemoryManager, IProcessConfig {
         locker.readFinishLock();
         try {
             if (this.isAllocatingOver >= MAX_WORKER_PROCESS) {
-//                locker.readLockList();
-//                try {
                 if (this.getOccupiedSpaces() == 0)
                     return true;
                 return false;
-//                }finally {
-//                    locker.readUnlockList();
-//                }
             }
             return false;
         } finally {
@@ -256,16 +250,11 @@ public class OsMemoryManager implements IMemoryManager, IProcessConfig {
 
                 this.mergingFreedBlocks();
 
-//                try {
-//                    Thread.sleep(100l);
-//                } catch (Exception ex) {}
                 // if execution is over break finish the process
                 if (this.isExecutionOver())
                     break;
             }
-//            try {
-//                Thread.sleep(1000);
-//            }catch (InterruptedException ex) {}
+
             // for last one
             this.mergingFreedBlocks();
         });
@@ -301,7 +290,7 @@ public class OsMemoryManager implements IMemoryManager, IProcessConfig {
         }
         return this.internalFragmentation;
     }
-
+    // first must acquire the lock
     public Tree getTree() {
         return tree;
     }
@@ -310,15 +299,4 @@ public class OsMemoryManager implements IMemoryManager, IProcessConfig {
         return new ArrayList<>(processes);
     }
 
-//    public int getInternalFragmentation() {
-//        return internalFragmentation;
-//    }
-//
-//    public void setInternalFragmentation(int internalFragmentation) {
-//        this.internalFragmentation = internalFragmentation;
-//    }
-//
-//    public int getTotalMemoryUsed() {
-//        return totalMemoryUsed;
-//    }
 }
