@@ -33,16 +33,16 @@ public class TreeDrawer implements Runnable {
             group.minHeight(this.treePane.getHeight());
             group.minWidth(this.treePane.getWidth());
             this.drawTreeUtil(tree.getRoot(), 20, treePane.getHeight() / 2,
-                    400,  400, group, 1);
+                    400, 400, group, 1);
 
             this.treePane.setContent(group);
-        }finally {
+        } finally {
             Locker.getLockerInstance().readUnlockTree();
         }
     }
 
     private void drawTreeUtil(Block root, double posX, double posY,
-                            double offsetX, double offsetY, Group group, int level) {
+                              double offsetX, double offsetY, Group group, int level) {
 
         if (root == null)
             return;
@@ -65,7 +65,7 @@ public class TreeDrawer implements Runnable {
                     offsetX / 2, offsetY / 2, group, level + 1);
         }
 
-        if (root.getRightChild() != null){
+        if (root.getRightChild() != null) {
             Line line1 = new Line(posX, posY, posX, avgY);
             Line line2 = new Line(posX, avgY, posX + offsetX, avgY);
             Line line3 = new Line(posX + offsetX, avgY, posX + offsetX, posY + offsetY);
@@ -78,7 +78,7 @@ public class TreeDrawer implements Runnable {
             group.getChildren().addAll(line1, line2, line3);
 
             drawTreeUtil(root.getRightChild(), posX + offsetX, posY + offsetY,
-                    offsetX  / 2, offsetY / 2, group, level + 1);
+                    offsetX / 2, offsetY / 2, group, level + 1);
         }
 
         // draw Circle
@@ -87,8 +87,8 @@ public class TreeDrawer implements Runnable {
         circle.setCenterY(posY);
         circle.setRadius(50 / level);
 
-        Text text = new Text(String.valueOf(root.getSize()) + "KB");
-        text.setX(posX - ((1. / level) * 40) );
+        Text text = new Text(String.valueOf(root.getSize()) + "KB\n" + "PID: " + root.getPidOfProcess());
+        text.setX(posX - ((1. / level) * 40));
         text.setY(posY + 5);
         text.setFont(Font.font("Verdana", FontWeight.EXTRA_BOLD, (50. / level / 2.)));
         text.getStyleClass().add("text");
@@ -97,7 +97,7 @@ public class TreeDrawer implements Runnable {
         if (root.isFree()) {
             circle.setFill(Color.rgb(11, 208, 81, 1));
             circle.getStyleClass().add("circle-green");
-        }else {
+        } else {
             circle.setFill(Color.rgb(250, 8, 0, 0.8));
             circle.getStyleClass().add("circle-red");
         }
@@ -106,25 +106,31 @@ public class TreeDrawer implements Runnable {
 
     @Override
     public void run() {
-        while(true) {
-
+        while (true) {
 
             try {
-                Thread.sleep(2000);
-            }catch (Exception ex){}
+                Thread.sleep(3000);
+            } catch (Exception ex) {
+            }
 
             Platform.runLater(() -> {
                 this.drawTree();
             });
             // delay until execution of the Platform is over
-            try {
-                Thread.sleep(200);
-            }catch (Exception ex){}
 
             //  if execution of process are over
-            if(OsMemoryManager.getInstance().isExecutionOver())
+            if (OsMemoryManager.getInstance().isExecutionOver())
                 break;
         }
 
+        OsMemoryManager.getInstance().mergingFreedBlocks();
+        try {
+            Thread.sleep(1000l);
+        }catch (InterruptedException ex) {}
+        OsMemoryManager.getInstance().mergingFreedBlocks();
+        // for last one
+        Platform.runLater(() -> {
+            this.drawTree();
+        });
     }
 }

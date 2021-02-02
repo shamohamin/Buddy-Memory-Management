@@ -34,8 +34,10 @@ public class MemoryReporter implements Runnable {
     static private final File tempFile = new File("./log");
     static private final DateTimeFormatter DATE_TIME_FORMAT = DateTimeFormatter.ofPattern("yyyy-mm-dd HH-MM-ss");
     static private final Long SLEEPING_TIME = 5000L;
+    private int counter;
 
     public MemoryReporter() {
+        this.counter = 0;
         this.makeFolder();
     }
 
@@ -64,28 +66,32 @@ public class MemoryReporter implements Runnable {
     @Override
     public void run() {
         while (true) {
-            try {
-                Thread.sleep(SLEEPING_TIME);
-            } catch (InterruptedException ex) {
-            }
-
-            ArrayList<MemoryStruct> memoryStructs;
-            // getting lock for list of process
-            Locker.getLockerInstance().readLockList();
-            int internalFragment = 0;
-            try {
-                internalFragment = OsMemoryManager.getInstance().calculateTheInternalFragment();
-                memoryStructs = this.reportMemory();
-            } finally {
-                Locker.getLockerInstance().readUnlockList();
-            }
-            // because it uses readLock
-            int totalOccupies = OsMemoryManager.getInstance().getOccupiedSpaces();
-            this.writeFile(memoryStructs, internalFragment, totalOccupies);
+            this.runUtil();
 
             if (OsMemoryManager.getInstance().isExecutionOver())
                 break;
         }
+        this.runUtil();
+    }
+
+    private void runUtil() {
+        try {
+            Thread.sleep(SLEEPING_TIME);
+        } catch (InterruptedException ex) {}
+
+        ArrayList<MemoryStruct> memoryStructs;
+        // getting lock for list of process
+        Locker.getLockerInstance().readLockList();
+        int internalFragment = 0;
+        try {
+            internalFragment = OsMemoryManager.getInstance().calculateTheInternalFragment();
+            memoryStructs = this.reportMemory();
+        } finally {
+            Locker.getLockerInstance().readUnlockList();
+        }
+
+        int totalOccupies = OsMemoryManager.getInstance().getOccupiedSpaces();
+        this.writeFile(memoryStructs, internalFragment, totalOccupies);
     }
 
     private ArrayList<MemoryStruct> reportMemory() {
@@ -163,7 +169,9 @@ public class MemoryReporter implements Runnable {
                 String prettyJsonString = gson.toJson(je);
                 System.out.println("Starting Logging The Memory.");
                 System.out.println(prettyJsonString);
-                System.out.println("***********************************************************");
+                System.out.println("*********************************************************** " + counter);
+                this.counter++;
+
                 fileWriter.write(prettyJsonString);
                 fileWriter.flush();
             } catch (IOException ex) {

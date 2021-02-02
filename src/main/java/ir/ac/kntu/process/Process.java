@@ -8,7 +8,6 @@ import ir.ac.kntu.os.OsMemoryManager;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -77,7 +76,7 @@ public class Process implements IProcess {
     @Override
     public void run() {
         ArrayList<Future> t = new ArrayList<>();
-        while (this.requestCount > 0) {
+        while (this.requestCount >= 0) {
             // sleeping for random milliseconds
             try {
                 Thread.sleep(ProcessRandomGenerator.randomSleepTime(START_SLEEP_TIME, END_SLEEP_TIME));
@@ -86,10 +85,15 @@ public class Process implements IProcess {
 
             try {
                 Jobs job;
-                if (this.holdingRequestedAddress.size() == 0)
-                    job = Jobs.ALLOCATING;
-                else
-                    job = ProcessRandomGenerator.randomJob();
+                this.listAndFinishLock.lock();
+                try {
+                    if (this.holdingRequestedAddress.size() == 0)
+                        job = Jobs.ALLOCATING;
+                    else
+                        job = ProcessRandomGenerator.randomJob();
+                }finally {
+                    this.listAndFinishLock.unlock();
+                }
 
                 switch (job) {
                     case ALLOCATING:
@@ -118,9 +122,10 @@ public class Process implements IProcess {
 
                             if (s != 0) {
                                 int pos = (int) ProcessRandomGenerator.randomRange(0, s);
-                                Long l = this.holdingRequestedAddress.get(pos);
+                                Long l = 0l;
                                 this.listAndFinishLock.lock();
                                 try {
+                                    l = this.holdingRequestedAddress.get(pos);
                                     this.holdingRequestedAddress.remove(pos);
                                 } finally {
                                     this.listAndFinishLock.unlock();
@@ -139,12 +144,11 @@ public class Process implements IProcess {
         this.executors.shutdown();
         // waiting until all threads are shutdown
         for (Future future : t) {
-            if (!future.isDone()) {
+//            if (!future.isDone()) {
                 try {
                     future.get();
-                } catch (Exception ex) {
-                }
-            }
+                } catch (Exception ex) {}
+//            }
         }
         // deAllocating entire process Address
         this.listAndFinishLock.lock();
@@ -152,15 +156,17 @@ public class Process implements IProcess {
             for (Long address : this.holdingRequestedAddress) {
                 this.deAllocation(address);
             }
-            for (int i = 0; i < this.holdingRequestedAddress.size(); i++) {
-                this.holdingRequestedAddress.remove(i);
-            }
+            this.holdingRequestedAddress = new ArrayList<>();
         } finally {
             this.listAndFinishLock.unlock();
         }
 
         // tell the other Process iam over
         OsMemoryManager.getInstance().incrementTheFinishVariable();
+
+        try {
+            Thread.sleep(1000l);
+        }catch (InterruptedException ex){}
 
         this.listAndFinishLock.lock();
         try {

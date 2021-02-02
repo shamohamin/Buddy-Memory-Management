@@ -64,6 +64,7 @@ public class OsMemoryManager implements IMemoryManager, IProcessConfig {
 
     /**
      * deAllocation
+     *
      * @param pid     is id of process
      * @param address is pointer to allocated memory address
      */
@@ -90,15 +91,17 @@ public class OsMemoryManager implements IMemoryManager, IProcessConfig {
             }
 
             if (freedBlock != null) {
-                freedBlock.removeChildren(address);
-                if (freedBlock.getOccupySize() == 0) {
-                    freedBlock.setPidOfProcess(0);
-                    freedBlock.setFree(true);
-                    this.occupiedSpaces.remove(i);
+                this.locker.writeLockTree();
+                try {
+                    freedBlock.removeChildren(address);
+                    if (freedBlock.getOccupySize() == 0) {
+                        freedBlock.setPidOfProcess(0);
+                        freedBlock.setFree(true);
+                        this.occupiedSpaces.remove(i);
+                    }
+                } finally {
+                    this.locker.writeUnlockTree();
                 }
-//                System.out.println("deallocation of process: " + pid);
-//                System.out.print(freedBlock.getOccupiedChildrenBlocks());
-//                System.out.println("*********************************************");
             } else {
                 throw new NoneDellocatingBlockError();
             }
@@ -141,11 +144,13 @@ public class OsMemoryManager implements IMemoryManager, IProcessConfig {
             } else {
                 block.setFree(false);
                 block.setPidOfProcess(pid);
-                occupiedSpaces.add(block);
-//                System.out.println(block);
-//                System.out.println("Allocating " + size + "To process" + pid);
-//                System.out.println(block.getOccupiedChildrenBlocks());
-//                System.out.println("*********************************************");
+
+                locker.writeLockList();
+                try {
+                    occupiedSpaces.add(block);
+                } finally {
+                    locker.writeUnlockList();
+                }
 
                 return block.addChildren(size);
             }
@@ -191,9 +196,9 @@ public class OsMemoryManager implements IMemoryManager, IProcessConfig {
 
     public void incrementTheFinishVariable() {
         this.locker.writeFinishLock();
-        try{
+        try {
             this.isAllocatingOver++;
-        }finally {
+        } finally {
             this.locker.writeFinishUnlock();
         }
     }
@@ -201,16 +206,24 @@ public class OsMemoryManager implements IMemoryManager, IProcessConfig {
     public boolean isExecutionOver() {
         locker.readFinishLock();
         try {
-            if (this.isAllocatingOver >= MAX_WORKER_PROCESS)
-                return true;
+            if (this.isAllocatingOver >= MAX_WORKER_PROCESS) {
+//                locker.readLockList();
+//                try {
+                if (this.getOccupiedSpaces() == 0)
+                    return true;
+                return false;
+//                }finally {
+//                    locker.readUnlockList();
+//                }
+            }
             return false;
-        }finally {
+        } finally {
             locker.readFinishUnlock();
         }
     }
 
     private void makeProcesses() {
-        for (int i = 1; i <= MAX_WORKER_PROCESS; i++){
+        for (int i = 1; i <= MAX_WORKER_PROCESS; i++) {
             this.processes.add(
                     new Process(i, ProcessRandomGenerator.randomRequestCount(MIN_JOB_PROCESS, MAX_JOB_PROCESS))
             );
@@ -219,13 +232,13 @@ public class OsMemoryManager implements IMemoryManager, IProcessConfig {
 
     private void initApp() {
         try {
-            for(Process process: this.processes) {
+            for (Process process : this.processes) {
                 executorService.submit(process);
             }
             // Initializing The MemoryReporter
             executorService.submit(new MemoryReporter());
             this.initMergingThread();
-        }catch (Exception ex) {
+        } catch (Exception ex) {
             System.err.println("ERROR IN INITIALIZING THE PROCESS");
         } finally {
             executorService.shutdown();
@@ -235,28 +248,36 @@ public class OsMemoryManager implements IMemoryManager, IProcessConfig {
     private void initMergingThread() {
         executorService.submit(() -> {
             // for merging the blocks if its possible after every 2 seconds
-            while(true){
+            while (true) {
                 try {
                     Thread.sleep(2000);
-                }catch (Exception ex) {
-                    ex.printStackTrace();
+                } catch (Exception ex) {
                 }
+
                 this.mergingFreedBlocks();
-                
+
+//                try {
+//                    Thread.sleep(100l);
+//                } catch (Exception ex) {}
                 // if execution is over break finish the process
                 if (this.isExecutionOver())
                     break;
             }
+//            try {
+//                Thread.sleep(1000);
+//            }catch (InterruptedException ex) {}
+            // for last one
+            this.mergingFreedBlocks();
         });
     }
 
     public int getOccupiedSpaces() {
         this.locker.readLockList();
         this.totalMemoryUsed = 0;
-        try{
-            for (Block block: this.occupiedSpaces)
+        try {
+            for (Block block : this.occupiedSpaces)
                 this.totalMemoryUsed += block.getOccupySize();
-        }finally {
+        } finally {
             this.locker.readUnlockList();
         }
 
@@ -265,7 +286,7 @@ public class OsMemoryManager implements IMemoryManager, IProcessConfig {
 
     public int getOccupiesOfSpecifiedProcess(int pid) {
         int occupiedSizes = 0;
-        for (Block block: this.occupiedSpaces) {
+        for (Block block : this.occupiedSpaces) {
             if (block.getPidOfProcess() == pid) {
                 occupiedSizes += block.getOccupySize();
             }
@@ -275,7 +296,7 @@ public class OsMemoryManager implements IMemoryManager, IProcessConfig {
 
     public int calculateTheInternalFragment() {
         this.internalFragmentation = 0;
-        for (Block block: this.occupiedSpaces) {
+        for (Block block : this.occupiedSpaces) {
             this.internalFragmentation += (block.getSize() - block.getOccupySize());
         }
         return this.internalFragmentation;
@@ -289,15 +310,15 @@ public class OsMemoryManager implements IMemoryManager, IProcessConfig {
         return new ArrayList<>(processes);
     }
 
-    public int getInternalFragmentation() {
-        return internalFragmentation;
-    }
-
-    public void setInternalFragmentation(int internalFragmentation) {
-        this.internalFragmentation = internalFragmentation;
-    }
-
-    public int getTotalMemoryUsed() {
-        return totalMemoryUsed;
-    }
+//    public int getInternalFragmentation() {
+//        return internalFragmentation;
+//    }
+//
+//    public void setInternalFragmentation(int internalFragmentation) {
+//        this.internalFragmentation = internalFragmentation;
+//    }
+//
+//    public int getTotalMemoryUsed() {
+//        return totalMemoryUsed;
+//    }
 }

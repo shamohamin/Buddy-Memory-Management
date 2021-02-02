@@ -122,5 +122,12 @@ public class ProcessCharts implements Runnable {
             if (OsMemoryManager.getInstance().isExecutionOver())
                 break;
         }
+        try {
+            Thread.sleep(1000);
+        }catch (InterruptedException ex) {}
+        Platform.runLater(() -> {
+            this.drawChart();
+            this.drawMemoryChart();
+        });
     }
 }
