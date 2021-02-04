@@ -30,8 +30,14 @@ For reporting the each process I used three technique(Operate Every 5 Seconds):
    * Logger Thread Which Using The Reporter Thread Json Data And Writes It In File Based On Time(./log folder). 
 
 ## Start 
-bash```
+```bash
+    cd project-folder
     mvn clean javafx:run
+    
+    OR
+    
+    (for making jar file) 
+    mvn clean install
 ‍‍‍‍‍‍
 
 ## Screen Shot
