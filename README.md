@@ -38,6 +38,7 @@ For reporting the each process I used three technique(Operate Every 5 Seconds):
     
     (for making jar file) 
     mvn clean install
+```
 ‍‍‍‍‍‍
 
 ## Screen Shot
@@ -52,4 +53,4 @@ For reporting the each process I used three technique(Operate Every 5 Seconds):
 
 ## Video
 * Video Of Execution:
-    ![alt text](./ScreenShotsAndVideos/process_video.gif "Title")
+    - ![alt text](./ScreenShotsAndVideos/process_video.gif "Title")
