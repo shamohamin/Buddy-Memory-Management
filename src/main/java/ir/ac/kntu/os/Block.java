@@ -79,6 +79,14 @@ public class Block {
         return size;
     }
 
+    public void setOccupySize(int occupySize) {
+        this.occupySize = occupySize;
+    }
+
+    public void setOccupiedChildrenBlocks(List<Block> occupiedChildrenBlocks) {
+        this.occupiedChildrenBlocks = occupiedChildrenBlocks;
+    }
+
     public void setFree(boolean free) { isFree = free; }
 
     public void setPidOfProcess(long pidOfProcess) {

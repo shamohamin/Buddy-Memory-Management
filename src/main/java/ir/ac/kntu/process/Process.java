@@ -54,8 +54,8 @@ public class Process implements IProcess {
     public void deAllocation(long address) {
         try {
             OsMemoryManager.getInstance().deAllocation(this.pid, address);
-        } catch (NoneDellocatingBlockError ex) {
-            System.err.println("THIS ADDRESS WAS NOT ALLOCATED TO BE FREED");
+        } catch (Exception ex) {
+            System.out.println("THIS ADDRESS WAS NOT ALLOCATED TO BE FREED ADDRESS: "+ address);
         }
     }
 
@@ -77,7 +77,8 @@ public class Process implements IProcess {
             // sleeping for random milliseconds
             try {
                 Thread.sleep(ProcessRandomGenerator.randomSleepTime(START_SLEEP_TIME, END_SLEEP_TIME));
-            } catch (InterruptedException ignored) {}
+            } catch (InterruptedException ignored) {
+            }
 
             try {
                 // Make Random Job
@@ -88,7 +89,7 @@ public class Process implements IProcess {
                         job = Jobs.ALLOCATING;
                     else
                         job = ProcessRandomGenerator.randomJob();
-                }finally {
+                } finally {
                     this.listAndFinishLock.unlock();
                 }
 
@@ -119,15 +120,16 @@ public class Process implements IProcess {
 
                             if (s != 0) {
                                 int pos = (int) ProcessRandomGenerator.randomRange(0, s);
-                                Long l = 0l;
-                                this.listAndFinishLock.lock();
-                                try {
-                                    l = this.holdingRequestedAddress.get(pos);
-                                    this.holdingRequestedAddress.remove(pos);
-                                } finally {
-                                    this.listAndFinishLock.unlock();
+                                if (pos >= 0 && pos < s) {
+                                    this.listAndFinishLock.lock();
+                                    try {
+                                        long l = this.holdingRequestedAddress.get(pos);
+                                        this.deAllocation(l);
+                                        this.holdingRequestedAddress.remove(pos);
+                                    } finally {
+                                        this.listAndFinishLock.unlock();
+                                    }
                                 }
-                                this.deAllocation(l);
                             }
                         }));
                 }
@@ -138,14 +140,21 @@ public class Process implements IProcess {
 
             this.requestCount--;
         }
+        System.out.println("ok pid:" + pid);
         this.executors.shutdown();
         // waiting until all threads are shutdown
         for (Future future : t) {
-//            if (!future.isDone()) {
+            if (!future.isDone()) {
                 try {
                     future.get();
                 } catch (Exception ignored) {}
-//            }
+            }
+        }
+
+
+        try {
+            Thread.sleep(1000l);
+        } catch (InterruptedException ignored) {
         }
         // deAllocating entire process Address
         this.listAndFinishLock.lock();
@@ -153,22 +162,24 @@ public class Process implements IProcess {
             for (Long address : this.holdingRequestedAddress) {
                 this.deAllocation(address);
             }
-            this.holdingRequestedAddress = new ArrayList<>();
         } finally {
+            this.holdingRequestedAddress = new ArrayList<>();
             this.listAndFinishLock.unlock();
         }
-
+        System.out.printf("PROCESS WITh PID:%d  WAS FREED\n", this.pid);
         // tell the other Process iam over
         OsMemoryManager.getInstance().incrementTheFinishVariable();
 
         try {
             Thread.sleep(1000l);
-        }catch (InterruptedException ignored){}
+        } catch (InterruptedException ignored) {
+        }
 
         this.listAndFinishLock.lock();
         try {
             this.finished = true;
             this.endTime = LocalDateTime.now();
+            this.holdingRequestedAddress = new ArrayList<>();
         } finally {
             this.listAndFinishLock.unlock();
         }

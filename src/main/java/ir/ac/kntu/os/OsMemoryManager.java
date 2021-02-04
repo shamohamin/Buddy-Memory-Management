@@ -124,10 +124,15 @@ public class OsMemoryManager implements IMemoryManager, IProcessConfig {
             for (int i = 0; i < this.occupiedSpaces.size(); i++) {
                 if (this.occupiedSpaces.get(i).getPidOfProcess() == pid) {
                     if (this.occupiedSpaces.get(i).getSize() - this.occupiedSpaces.get(i).getOccupySize() >= size) {
-                        long out = this.occupiedSpaces.get(i).addChildren(size);
-                        if (out == -1)
-                            break;
-                        return out;
+                        locker.writeLockTree();
+                        try {
+                            long out = this.occupiedSpaces.get(i).addChildren(size);
+                            if (out == -1)
+                                break;
+                            return out;
+                        }finally {
+                            locker.writeUnlockTree();
+                        }
                     }
                 }
             }
@@ -147,11 +152,10 @@ public class OsMemoryManager implements IMemoryManager, IProcessConfig {
                 locker.writeLockList();
                 try {
                     occupiedSpaces.add(block);
+                    return block.addChildren(size);
                 } finally {
                     locker.writeUnlockList();
                 }
-
-                return block.addChildren(size);
             }
         } finally {
             locker.writeUnlockTree();
@@ -206,6 +210,20 @@ public class OsMemoryManager implements IMemoryManager, IProcessConfig {
         locker.readFinishLock();
         try {
             if (this.isAllocatingOver >= MAX_WORKER_PROCESS) {
+                locker.writeLockList();
+                locker.writeLockTree();
+                try {
+                    for (Block block: this.occupiedSpaces){
+                        block.setFree(true);
+                        block.setPidOfProcess(0);
+                        block.setOccupySize(0);
+                        block.setOccupiedChildrenBlocks(new ArrayList<>());
+                    }
+                    this.occupiedSpaces = new ArrayList<>();
+                }finally {
+                    locker.writeUnlockList();
+                    locker.writeUnlockTree();
+                }
                 if (this.getOccupiedSpaces() == 0)
                     return true;
                 return false;

@@ -113,6 +113,7 @@ public class MemoryReporter implements Runnable {
                 boolean finish = process.isProcessOver();
                 if (finish) {
                     memoryStruct.endTime = process.getEndTime();
+                    memoryStruct.addresses = new ArrayList<>();
                 }
                 memoryStruct.isProcessFinished = finish;
                 memoryStructs.add(memoryStruct);
